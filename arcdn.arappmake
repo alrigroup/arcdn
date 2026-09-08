@@ -2,14 +2,22 @@ ALRIGROUP@APPMAKE
 {
   "name": "arcdn",
   "bin": "arcdn.arapp",
-  "version": "0.2.0",
+  "version": "0.2.01",
   "runtime": "native",
   "entry": "cdn_web",
   "platforms": {
-    "windows": {"entry": "cdn_web"},
-    "linux": {"entry": "cdn_web"},
-    "linux-x64": {"entry": "cdn_web"},
-    "linux-arm64": {"entry": "cdn_web"}
+    "windows": {
+      "entry": "cdn_web"
+    },
+    "linux": {
+      "entry": "cdn_web"
+    },
+    "linux-x64": {
+      "entry": "cdn_web"
+    },
+    "linux-arm64": {
+      "entry": "cdn_web"
+    }
   },
   "build": {
     "staging": "$ARCORE/.staging/$APP_NAME",
@@ -23,5 +31,14 @@ ALRIGROUP@APPMAKE
   },
   "files": [
     "cdn_web"
+  ],
+  "description": "Motor de Distribuicao Estatica e Streaming de Midia",
+  "commands": [
+    "status",
+    "routes",
+    "list",
+    "add <path> <file>",
+    "del <path>",
+    "ping"
   ]
 }
