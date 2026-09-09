@@ -236,7 +236,7 @@ ARCDN listens for CLI control commands dispatched via `alrios cdn <command>`:
 1. **Path Traversal Blocking**: Any path containing `..`, `%2e%2e`, backslashes, or null bytes is immediately dropped with `400 Bad Request`.
 2. **Read-Only Operation**: ARCDN has no POST, PUT, DELETE, or file-writing logic; it cannot be abused for file upload or arbitrary code execution.
 3. **MIME Sniffing Prevention**: Emits `X-Content-Type-Options: nosniff` to prevent browsers from executing static media as scripts.
-4. **CORS Safety**: Explicitly intended for public asset distribution; CORS is set to `*` to allow consumption from all ALRIOS web native applications.
+4. **CORS Safety**: Explicitly intended for public asset distribution; CORS is set to `*` to allow consumption from all ALRIOS Web applications.
 
 ---
 
