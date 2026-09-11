@@ -24,7 +24,7 @@ ALRIGROUP@APPMAKE
     "steps": [
       {
         "name": "cc",
-        "cmd": "cc -O2 -Isrc -Isrc/os/include -I../../ALRIOS/arkernel/include -I../../ALRIOS/arkernel/os/include -I../../ALRIOS/arkernel/ipc -o $STAGING/cdn_web src/cdn_server.c src/os/main.c ../../ALRIOS/arkernel/os/main.c -lssl -lcrypto -lpthread"
+        "cmd": "cc -O2 -Isrc -Isrc/os/include -I$ARCORE/include -o $STAGING/cdn_web src/cdn_server.c src/os/main.c -L$ARCORE/lib -larkernel -lssl -lcrypto -lpthread"
       }
     ],
     "cleanup": []
