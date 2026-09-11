@@ -2,7 +2,7 @@
 
 *High-Throughput Static Delivery, Media Streaming & Edge Asset Server*
 
-*Version: 0.2.01 | Engineered by ALRI Development | Governed by ALRI GROUP © 2026 | License: ARGLP*
+*Version: 0.2.02 | Engineered by ALRI Development | Governed by ALRI GROUP © 2026 | License: ARGLP*
 
 ---
 
@@ -278,7 +278,7 @@ cc -O2 \
 ```json
 {
   "name": "arcdn",
-  "version": "0.2.01",
+  "version": "0.2.02",
   "runtime": "native",
   "entry": "cdn_web",
   "files": ["cdn_web"],
@@ -289,6 +289,6 @@ cc -O2 \
 
 ---
 
-*Document generated from source code analysis of ARCDN v0.2.01.*
+*Document generated from source code analysis of ARCDN v0.2.02.*
 *Engineered by ALRI Development. Governed by ALRI GROUP © 2026 — All rights reserved.*
 *License: ARGLP (ALRI GROUP LICENSE PERMISSIVE — Version 2)*
