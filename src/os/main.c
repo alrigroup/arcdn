@@ -1,10 +1,11 @@
-/*
- * Copyright (c) ALRIGROUP and its affiliates.
- *
- * This code is licensed under the ARGLR - ALRI GROUP LICENSE RESERVED
- * found in the LICENSE file in the root directory of this source tree
- * and at: https://github.com/alrigroup/licenses/tree/main
- */
+/* ====================================================================
+ * Copyright (c) 2026 ALRI Development. All rights reserved.
+ * Licensed under the terms in the repository LICENSE file.
+ * ==================================================================== */
+
+#ifndef _WIN32
+#define _POSIX_C_SOURCE 200809L
+#endif
 
 #include "home_os.h"
 #include <stddef.h>
@@ -24,12 +25,12 @@ int home_os_get_exe_dir(char *buf, int size) {
 }
 
 int home_os_connect_timeout(int fd, const char *addr, uint16_t port, int timeout_ms) {
-    if (fd < 0 || !addr) return -1;
+    if (fd < 0 || addr == NULL || port == 0U || timeout_ms <= 0) return -1;
     return os_connect_timeout(fd, addr, port, timeout_ms);
 }
 
 int home_os_set_recv_timeout(int fd, int timeout_ms) {
-    if (fd < 0) return -1;
+    if (fd < 0 || timeout_ms <= 0) return -1;
     return os_set_recv_timeout(fd, timeout_ms);
 }
 

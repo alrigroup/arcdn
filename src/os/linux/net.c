@@ -1,18 +1,17 @@
-/*
- * Copyright (c) ALRIGROUP and its affiliates.
- *
- * This code is licensed under the ARGLR - ALRI GROUP LICENSE RESERVED
- * found in the LICENSE file in the root directory of this source tree
- * and at: https://github.com/alrigroup/licenses/tree/main
- */
+/* ====================================================================
+ * Copyright (c) 2026 ALRI Development. All rights reserved.
+ * Licensed under the terms in the repository LICENSE file.
+ * ==================================================================== */
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 static int os_connect_timeout(int fd, const char *addr, uint16_t port, int timeout_ms) {
     struct sockaddr_in sa;
@@ -22,15 +21,16 @@ static int os_connect_timeout(int fd, const char *addr, uint16_t port, int timeo
     if (inet_pton(AF_INET, addr, &sa.sin_addr) <= 0) return -1;
 
     int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    if (flags < 0 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        return -1;
+    }
 
     int rc = connect(fd, (const struct sockaddr *)&sa, sizeof(sa));
     if (rc == 0) {
-        fcntl(fd, F_SETFL, flags);
-        return 0;
+        return (fcntl(fd, F_SETFL, flags) == 0) ? 0 : -1;
     }
     if (errno != EINPROGRESS) {
-        fcntl(fd, F_SETFL, flags);
+        (void)fcntl(fd, F_SETFL, flags);
         return -1;
     }
 
@@ -41,12 +41,21 @@ static int os_connect_timeout(int fd, const char *addr, uint16_t port, int timeo
     tv.tv_sec = timeout_ms / 1000;
     tv.tv_usec = (timeout_ms % 1000) * 1000;
 
-    int sel = select(fd + 1, NULL, &wfds, NULL, &tv);
+    int sel;
+    do {
+        sel = select(fd + 1, NULL, &wfds, NULL, &tv);
+    } while (sel < 0 && errno == EINTR);
+
     int soerr = 0;
     socklen_t slen = sizeof(soerr);
-    getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &slen);
-    fcntl(fd, F_SETFL, flags);
-    return (sel > 0 && soerr == 0) ? 0 : -1;
+    int socket_error_rc = -1;
+    if (sel > 0 && FD_ISSET(fd, &wfds)) {
+        socket_error_rc = getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &slen);
+    }
+    if (fcntl(fd, F_SETFL, flags) < 0) {
+        return -1;
+    }
+    return (sel > 0 && socket_error_rc == 0 && soerr == 0) ? 0 : -1;
 }
 
 static int os_set_recv_timeout(int fd, int timeout_ms) {

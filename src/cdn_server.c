@@ -1,10 +1,12 @@
-/*
- * Copyright (c) ALRIGROUP and its affiliates.
- *
- * This code is licensed under the ARGLR - ALRI GROUP LICENSE RESERVED
- * found in the LICENSE file in the root directory of this source tree
- * and at: https://github.com/alrigroup/licenses/tree/main
- */
+/* ====================================================================
+ * Copyright (c) 2026 ALRI Development. All rights reserved.
+ * Licensed under the terms in the repository LICENSE file.
+ * ==================================================================== */
+
+#ifndef _WIN32
+#define _POSIX_C_SOURCE 200809L
+#define _XOPEN_SOURCE 700
+#endif
 
 #include "ar_ipc.h"
 #include "aros_hal.h"
@@ -18,6 +20,7 @@
 #include <direct.h>
 #else
 #include <sys/stat.h>
+#include <sys/types.h>
 #endif
 
 #define APP_NAME "cdn"
@@ -96,8 +99,10 @@ static void lower_ext(char *out, int out_size, const char *path) {
 
 static void mkdir_p(const char *path) {
   char tmp[1024];
-  strncpy(tmp, path, sizeof(tmp) - 1);
-  tmp[sizeof(tmp) - 1] = '\0';
+  if (path == NULL || snprintf(tmp, sizeof(tmp), "%s", path) < 0 ||
+      strlen(path) >= sizeof(tmp)) {
+    return;
+  }
   for (char *p = tmp + 1; *p; p++) {
     if (*p == '/' || *p == '\\') {
       char save = *p;
@@ -118,8 +123,14 @@ static void mkdir_p(const char *path) {
 }
 
 static void cfg_dir_of(const char *cfg_path, char *dir, int size) {
-  strncpy(dir, cfg_path, size - 1);
-  dir[size - 1] = '\0';
+  if (cfg_path == NULL || dir == NULL || size <= 0) {
+    return;
+  }
+  int written = snprintf(dir, (size_t)size, "%s", cfg_path);
+  if (written < 0 || written >= size) {
+    dir[0] = '\0';
+    return;
+  }
   char *sep = strrchr(dir, '/');
 #ifdef _WIN32
   char *sep2 = strrchr(dir, '\\');
@@ -185,12 +196,24 @@ static int file_seek_set(FILE *f, long long off) {
 }
 
 static int normalize_path(const char *in, char *out, int out_size) {
+  if (in == NULL || out == NULL || out_size <= 0) {
+    return -1;
+  }
 #ifdef _WIN32
   if (_fullpath(out, in, (size_t)out_size) == NULL)
     return -1;
 #else
-  if (realpath(in, out) == NULL)
+  char *resolved = realpath(in, NULL);
+  if (resolved == NULL) {
     return -1;
+  }
+  size_t resolved_len = strlen(resolved);
+  if (resolved_len >= (size_t)out_size) {
+    free(resolved);
+    return -1;
+  }
+  memcpy(out, resolved, resolved_len + 1U);
+  free(resolved);
 #endif
   return 0;
 }
@@ -211,7 +234,10 @@ static int is_valid_route_path(const char *p) {
 
 static int cfg_save(void) {
   char tmp[2048];
-  snprintf(tmp, sizeof(tmp), "%s.tmp", g_cfg_path);
+  int tmp_len = snprintf(tmp, sizeof(tmp), "%s.tmp", g_cfg_path);
+  if (tmp_len < 0 || (size_t)tmp_len >= sizeof(tmp)) {
+    return -1;
+  }
 
   FILE *f = fopen(tmp, "w");
   if (!f)
@@ -962,7 +988,7 @@ static void serve(int c, const char *path, const char *range_hdr, int is_head) {
       }
     }
 
-    /* Dynamic Media Resolution: /media/post_* or /media/* */
+    /* Dynamic media resolution for /media/post_* and all /media paths. */
     if (!file[0] && strncmp(clean, "/media/", 7) == 0) {
       const char *fn = clean + 7;
       int valid = 1;
